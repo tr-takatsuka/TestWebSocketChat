@@ -1,0 +1,100 @@
+﻿<!DDCTYPE>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="referrer" content="none">
+	<title>WebSocketテスト</title>
+	<link href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.11.4/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.4.min.js"></script>
+	<script src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.11.4/jquery-ui.min.js"></script>
+	<script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/bootstrap.min.js"></script>
+
+	<style type="text/css">
+		body {
+			font-size: 12px;
+		}
+		#log {
+			margin: 6px 0 0 0;
+			padding: 5px;
+			border: 1px solid #ccc;
+			height: 300px;
+			overflow: auto;
+		}
+	</style>
+</head>
+
+<body>
+
+	<script type="text/javascript">
+		(function () {
+			$(document).ready(function () {
+
+				var log, serverUrl, socket;
+				log = function (msg) {
+					$('#log').prepend("" + msg + "<br/>");
+				};
+
+				document.getElementById('host').value = 'ws://localhost:11111/';
+
+				$('#connect').click(function () {
+					socket = new WebSocket(document.getElementById('host').value);
+					socket.onopen = onOpen;
+					socket.onmessage = onMessage;
+					socket.onclose = onClose;
+					socket.onerror = onError;
+				});
+
+				function onMessage(ev) {
+					log(ev.data);
+					response = JSON.parse(ev.data);
+					$('#state').text(response.state + ":" + response.pos + "/" + response.dur);
+				}
+				function onError(ev) {
+					log("Error: " + ev.data);
+				}
+				function onOpen(ev) {
+					log("Opened : " + ev.data);
+				}
+				function onClose(ev) {
+					log("Closed : " + ev.data);
+				}
+
+				$('#send').click(function () {
+					var payload;
+					payload = new Object();
+					payload.message = document.getElementById('message').value;
+					return socket.send(JSON.stringify(payload));
+				});
+			});
+		}).call(this);
+
+	</script>
+
+	<!-- ナビゲーション -->
+	<div class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-brand">
+				WebSocketテスト
+			</div>
+		</div>
+	</div>
+
+	<div class="container-fluid" style="padding-bottom:10px;">
+		<div class="row">
+			<div class="col-xs-12">
+				<input type="text" id="host" />
+				<button id="connect">connect</button>
+				<h2>Message</h2>
+				<input type="text" id="message" />
+				<button id="send">send</button>
+				<h2>Log</h2>
+				<div id="log"></div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>
