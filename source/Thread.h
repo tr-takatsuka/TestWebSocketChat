@@ -24,12 +24,12 @@ public:
 };
 
 template <class T> class CWorkerThreadT
+	:boost::noncopyable
 {
-	std::unique_ptr<T>								m_upClass;
-	std::thread										m_thread;
-	std::unique_ptr<boost::asio::io_service::work>	m_upWork;
-	CSignal											m_signalDestructor;
-	std::unique_ptr<boost::asio::io_service>		m_upIoService;
+	std::unique_ptr<T>							m_upClass;
+	std::thread									m_thread;
+	CSignal										m_signalDestructor;
+	std::unique_ptr<boost::asio::io_service>	m_upIoService;
 public:
 	template <class FuncFactory> CWorkerThreadT(
 			FuncFactory fFactory=[](boost::asio::io_service &ioService){
@@ -45,7 +45,7 @@ public:
 					m_upClass = fFactory(*m_upIoService);	// クラス構築
 					assert( m_upClass.get() );
 					spSignal->SetReady();					// 表スレッドを走らす
-					m_upWork = std::make_unique<boost::asio::io_service::work>(*m_upIoService);
+					boost::asio::io_service::work work(*m_upIoService);
 					m_upIoService->run();
 				}catch( const std::exception &e ){
 					e.what();
@@ -61,7 +61,6 @@ public:
 
 	~CWorkerThreadT()
 	{
-		m_upWork.reset();
 		m_upIoService->post(
 			[](){
 				throw bool(true);		// io_service::run() 終了
